@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type {
   ButtonHTMLAttributes,
   ChangeEvent,
@@ -194,12 +195,29 @@ export function Dialog({
 export function FileDrop({
   fileName,
   onChange,
+  onDrop,
 }: {
   fileName: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onDrop: (files: FileList) => void;
 }) {
+  const [dragging, setDragging] = useState(false);
+
   return (
-    <label className="ds-file-drop">
+    <label
+      className={`ds-file-drop ${dragging ? "is-dragging" : ""}`}
+      onDragEnter={(event) => {
+        event.preventDefault();
+        setDragging(true);
+      }}
+      onDragOver={(event) => event.preventDefault()}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(event) => {
+        event.preventDefault();
+        setDragging(false);
+        if (event.dataTransfer.files.length) onDrop(event.dataTransfer.files);
+      }}
+    >
       <input type="file" accept=".csv,.xlsx" multiple onChange={onChange} />
       <span className="ds-file-drop__icon">
         <img src={`${assets}/13274.svg`} alt="" />
@@ -227,17 +245,37 @@ export function SofiaHeader() {
 }
 
 export function SideNavigation() {
+  const [active, setActive] = useState(0);
+
   return (
     <nav className="ds-side-nav" aria-label="Primary navigation">
       {Array.from({ length: 11 }).map((_, index) => (
         <button
           key={index}
-          className={`ds-side-nav__item ${index === 0 ? "is-active" : ""}`}
+          className={`ds-side-nav__item ${index === active ? "is-active" : ""}`}
           aria-label={`Navigation item ${index + 1}`}
+          aria-current={index === active ? "page" : undefined}
+          onClick={() => setActive(index)}
         >
           <img src={`${assets}/${index === 0 ? "4e8e6.svg" : "9d846.svg"}`} alt="" />
         </button>
       ))}
     </nav>
+  );
+}
+
+export function Toast({
+  message,
+  onDismiss,
+}: {
+  message: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="ds-toast" role="status" aria-live="polite">
+      <span className="ds-toast__mark">✓</span>
+      <span>{message}</span>
+      <IconButton icon="29646.svg" label="Dismiss notification" onClick={onDismiss} />
+    </div>
   );
 }

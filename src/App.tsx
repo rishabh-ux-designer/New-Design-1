@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Checkbox,
@@ -11,6 +11,7 @@ import {
   SofiaHeader,
   StatusTag,
   Tabs,
+  Toast,
 } from "./design-system";
 
 type Location = {
@@ -104,10 +105,13 @@ function LocationTable({
                     icon="cb7e1.svg"
                     label={`Actions for ${row.code}`}
                     variant="outlined"
-                    onClick={() => onMenuChange(menuRow === row.id ? null : row.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onMenuChange(menuRow === row.id ? null : row.id);
+                    }}
                   />
                   {menuRow === row.id && (
-                    <div className="row-menu">
+                    <div className="row-menu" onClick={(event) => event.stopPropagation()}>
                       <Button variant="ghost" size="small" onClick={() => onEdit(row.id)}>Edit</Button>
                       <Button variant="ghost" size="small" onClick={() => onDeactivate(row.id)}>
                         {row.active ? "Deactivate" : "Activate"}
@@ -171,8 +175,15 @@ function AddLocationDialog({
   );
 }
 
-function ImportDialog({ onClose }: { onClose: () => void }) {
+function ImportDialog({
+  onClose,
+  onUpload,
+}: {
+  onClose: () => void;
+  onUpload: (fileName: string) => void;
+}) {
   const [fileName, setFileName] = useState("");
+  const acceptFiles = (files: FileList) => setFileName(files[0]?.name ?? "");
 
   return (
     <Dialog title="Import Locations - CSV" onClose={onClose}>
@@ -183,11 +194,12 @@ function ImportDialog({ onClose }: { onClose: () => void }) {
         </p>
         <FileDrop
           fileName={fileName}
-          onChange={(event) => setFileName(event.target.files?.[0]?.name ?? "")}
+          onChange={(event) => event.target.files && acceptFiles(event.target.files)}
+          onDrop={acceptFiles}
         />
         <div className="dialog-actions">
           <Button variant="secondary" size="large" onClick={onClose}>Cancel</Button>
-          <Button variant={fileName ? "primary" : "disabled"} size="large" disabled={!fileName} onClick={onClose}>
+          <Button variant={fileName ? "primary" : "disabled"} size="large" disabled={!fileName} onClick={() => onUpload(fileName)}>
             Upload
           </Button>
         </div>
@@ -206,6 +218,27 @@ export default function App() {
   const [dialog, setDialog] = useState<"add" | "import" | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [menuRow, setMenuRow] = useState<number | null>(null);
+  const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (dialog) {
+        setDialog(null);
+        setEditingId(null);
+      } else {
+        setMenuRow(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [dialog]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(""), 3200);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
 
   const filteredRows = useMemo(
     () => locations.filter((row) => {
@@ -219,6 +252,7 @@ export default function App() {
 
   const updateSelectedStatus = (active: boolean) => {
     setLocations((current) => current.map((row) => selected.has(row.id) ? { ...row, active } : row));
+    setToast(`${selected.size} location${selected.size === 1 ? "" : "s"} ${active ? "activated" : "deactivated"}`);
   };
 
   const saveLocation = (code: string) => {
@@ -232,10 +266,11 @@ export default function App() {
     }
     setEditingId(null);
     setDialog(null);
+    setToast(editingId ? "Location updated" : "Location added");
   };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" onClick={() => menuRow !== null && setMenuRow(null)}>
       <SofiaHeader />
       <SideNavigation />
       <main className="workspace">
@@ -301,8 +336,10 @@ export default function App() {
               menuRow={menuRow}
               onMenuChange={setMenuRow}
               onDeactivate={(id) => {
+                const wasActive = locations.find((row) => row.id === id)?.active;
                 setLocations((current) => current.map((row) => row.id === id ? { ...row, active: !row.active } : row));
                 setMenuRow(null);
+                setToast(`Location ${wasActive ? "deactivated" : "activated"}`);
               }}
               onEdit={(id) => {
                 setEditingId(id);
@@ -326,7 +363,16 @@ export default function App() {
           editing={locations.find((row) => row.id === editingId)}
         />
       )}
-      {dialog === "import" && <ImportDialog onClose={() => setDialog(null)} />}
+      {dialog === "import" && (
+        <ImportDialog
+          onClose={() => setDialog(null)}
+          onUpload={(fileName) => {
+            setDialog(null);
+            setToast(`${fileName} is ready to import`);
+          }}
+        />
+      )}
+      {toast && <Toast message={toast} onDismiss={() => setToast("")} />}
     </div>
   );
 }
