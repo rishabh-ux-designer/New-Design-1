@@ -366,6 +366,17 @@ button {
   margin: var(--space-4);
 }
 
+.ds-input__clear {
+  flex: 0 0 44px;
+  align-self: stretch;
+  border-left: 1px solid var(--color-grey-300);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.ds-input__clear:hover {
+  background: var(--color-grey-50);
+}
+
 .ds-field--compact .ds-input-shell {
   box-shadow: none;
 }
@@ -499,6 +510,10 @@ button {
   height: 24px;
 }
 
+.ds-checkbox--checked img {
+  animation: check-in 150ms ease-out;
+}
+
 .bulk-actions {
   min-height: 60px;
   margin-bottom: var(--space-4);
@@ -568,6 +583,21 @@ button {
 
 .location-table tbody tr:hover {
   background: var(--color-grey-25);
+}
+
+.location-table tbody tr.is-selected {
+  background: color-mix(in srgb, var(--color-primary-100) 42%, var(--color-white));
+}
+
+.location-table tbody tr.is-selected:hover {
+  background: color-mix(in srgb, var(--color-primary-100) 64%, var(--color-white));
+}
+
+.location-table .empty-row td {
+  height: 180px;
+  color: var(--color-grey-500);
+  text-align: center;
+  border-bottom: 0;
 }
 
 .location-table .selection-cell {
@@ -799,6 +829,7 @@ button {
   box-shadow: 0 8px 24px rgb(16 24 40 / 18%);
   font-family: "Open Sans:SemiBold", sans-serif;
   animation: toast-in 220ms ease-out;
+  overflow: hidden;
 }
 
 .ds-toast__mark {
@@ -815,6 +846,21 @@ button {
   flex: 1;
 }
 
+.ds-toast__progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--color-primary-600);
+  transform-origin: left;
+  animation: toast-progress 3200ms linear forwards;
+}
+
+@keyframes check-in {
+  50% { transform: scale(1.12); }
+}
+
 @keyframes menu-in {
   from { opacity: 0; transform: translateY(-4px) scale(.98); }
 }
@@ -825,6 +871,10 @@ button {
 
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(12px); }
+}
+
+@keyframes toast-progress {
+  to { transform: scaleX(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -62,21 +62,34 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   label?: ReactNode;
   trailingIcon?: string;
   compact?: boolean;
+  onClear?: () => void;
 };
 
 export function InputField({
   label,
   trailingIcon,
   compact,
+  onClear,
   className = "",
   ...props
 }: InputProps) {
+  const hasValue = typeof props.value === "string" && props.value.length > 0;
+
   return (
     <label className={`ds-field ${compact ? "ds-field--compact" : ""} ${className}`}>
       {label && <span className="ds-field__label">{label}</span>}
       <span className="ds-input-shell">
         <input className="ds-input" {...props} />
-        {trailingIcon && <img className="ds-input__icon" src={`${assets}/${trailingIcon}`} alt="" />}
+        {hasValue && onClear ? (
+          <IconButton
+            className="ds-input__clear"
+            icon="29646.svg"
+            label="Clear search"
+            onClick={onClear}
+          />
+        ) : trailingIcon ? (
+          <img className="ds-input__icon" src={`${assets}/${trailingIcon}`} alt="" />
+        ) : null}
       </span>
     </label>
   );
@@ -255,6 +268,7 @@ export function SideNavigation() {
           className={`ds-side-nav__item ${index === active ? "is-active" : ""}`}
           aria-label={`Navigation item ${index + 1}`}
           aria-current={index === active ? "page" : undefined}
+          title={`Navigation item ${index + 1}`}
           onClick={() => setActive(index)}
         >
           <img src={`${assets}/${index === 0 ? "4e8e6.svg" : "9d846.svg"}`} alt="" />
@@ -276,6 +290,7 @@ export function Toast({
       <span className="ds-toast__mark">✓</span>
       <span>{message}</span>
       <IconButton icon="29646.svg" label="Dismiss notification" onClick={onDismiss} />
+      <span className="ds-toast__progress" aria-hidden="true" />
     </div>
   );
 }

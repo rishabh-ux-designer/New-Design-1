@@ -84,7 +84,7 @@ function LocationTable({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id}>
+              <tr key={row.id} className={selected.has(row.id) ? "is-selected" : ""}>
                 <td className="selection-cell">
                   <Checkbox
                     label={`Select ${row.code}`}
@@ -121,6 +121,11 @@ function LocationTable({
                 </td>
               </tr>
             ))}
+            {rows.length === 0 && (
+              <tr className="empty-row">
+                <td colSpan={10}>No locations match your filters.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -295,6 +300,7 @@ export default function App() {
                   placeholder="Location code, SKUs"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
+                  onClear={() => setQuery("")}
                   trailingIcon="d7440.svg"
                 />
                 <SelectField
